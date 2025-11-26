@@ -3,3 +3,5 @@ numpy
 streamlit
 matplotlib
 seaborn
+python-dotenv
+pillow
