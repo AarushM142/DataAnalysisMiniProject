@@ -1,7 +1,11 @@
-pandas
-numpy
 streamlit
-matplotlib
+pandas
+numpy==1.26.4
+matplotlib==3.7.2
 seaborn
 python-dotenv
 pillow
+cycler
+kiwisolver
+fonttools
+
