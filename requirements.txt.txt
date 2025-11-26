@@ -1,7 +1,7 @@
-streamlit
-pandas
+streamlit==1.39.0
+pandas==2.2.2
 numpy==1.26.4
-matplotlib==3.5.3
+matplotlib==3.7.2
 seaborn==0.12.2
-python-dotenv
-pillow
+python-dotenv==1.0.1
+pillow==10.4.0
