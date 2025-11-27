@@ -1,13 +1,15 @@
+
 import os
 import pandas as pd
 import numpy as np
 import streamlit as st
-from dotenv import load_dotenv
 import matplotlib.pyplot as plt
 import seaborn as sns
 import io
+from dateutil import parser
+import requests
+import datetime
 
-load_dotenv()
 
 # ------------------------------
 # Custom CSS
@@ -79,6 +81,9 @@ with st.sidebar:
         summary_stats_checkbox = st.checkbox("Summary Statistics")
         column_info_checkbox = st.checkbox("Column Information")
         correlation_matrix_checkbox = st.checkbox("Correlation Matrix")
+    
+    with st.expander("5) Realtime AQI Analysis of Nearest City", expanded=False):
+        aqi_api= st.checkbox("Fetch Nearest City AQI")
 
 # ------------------------------
 # Caching functions
@@ -99,6 +104,18 @@ def generate_pm25_rolling(df):
     df_plot['PM2.5_rolling'] = df_plot['PM2.5'].rolling(window=7).mean()
     df_plot['PM2.5_ema'] = df_plot['PM2.5'].ewm(span=7).mean()
     return df_plot
+
+@st.cache_data(ttl=300)
+def fetch_aqi():
+    API_KEY = st.secrets.get("AQI_API_KEY")  
+    url = f"http://api.airvisual.com/v2/nearest_city?key={API_KEY}"
+    try:
+        r = requests.get(url, timeout=10)
+        r.raise_for_status()
+        return r.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error fetching AQI data: {e}")
+        return None
 
 # ------------------------------
 # Main App Logic
@@ -321,3 +338,30 @@ if uploaded:
             st.pyplot(fig); plt.close(fig)
         else:
             st.warning("No rows selected for plotting.")
+    
+if aqi_api:
+    st.markdown("---")
+    st.subheader("🌫️ Realtime AQI")
+
+    data = fetch_aqi()
+    if not data or "data" not in data:
+        st.warning("Unable to fetch AQI data. Check your API key or rate limits.")
+    else:
+        city = data["data"]["city"]
+        state = data["data"]["state"]
+        country = data["data"]["country"]
+        pollution = data["data"]["current"]["pollution"]
+        weather = data["data"]["current"]["weather"]
+
+        st.markdown(f"**Location:** {city}, {state}, {country}")
+        st.metric("AQI (US Standard)", pollution.get("aqius","N/A"))
+        st.write(f"Primary pollutant: **{pollution.get('mainus','N/A').upper()}**")
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Temperature", f"{weather.get('tp','N/A')}°C")
+        col2.metric("Humidity", f"{weather.get('hu','N/A')}%")
+        col3.metric("Wind", f"{weather.get('ws','N/A')} m/s")
+
+        st.write("**Pollutant Concentrations:**")
+        st.write(f"PM2.5: {pollution.get('p2','N/A')} µg/m³ | PM10: {pollution.get('p1','N/A')} µg/m³")
+        
