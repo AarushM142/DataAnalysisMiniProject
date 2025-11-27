@@ -275,7 +275,7 @@ if uploaded:
         monthly_avg_aqi = df_for_charts.groupby('Date')['AQI'].mean().resample('M').mean()
         fig, ax = plt.subplots(figsize=(14,6))
         sns.lineplot(x=monthly_avg_aqi.index, y=monthly_avg_aqi.values, ax=ax)
-        ax.set_xlabel('Date'); ax.set_ylabel('Average AQI')
+        ax.set_xlabel('Year'); ax.set_ylabel('Average AQI')
         st.pyplot(fig); plt.close(fig)
 
     # --- Top 10 Cities PM2.5
